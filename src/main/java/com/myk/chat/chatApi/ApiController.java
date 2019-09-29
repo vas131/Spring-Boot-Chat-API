@@ -1,7 +1,6 @@
 package com.myk.chat.chatApi;
 
 import com.myk.chat.chatApi.configs.SpringMongoConfig;
-import com.myk.chat.chatApi.models.CheckServerModel;
 import com.myk.chat.chatApi.models.Messages;
 import com.myk.chat.chatApi.helpers.RandomString;
 import com.myk.chat.chatApi.repositories.MessagesRep;
@@ -20,22 +19,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 public class ApiController {
+
+    //GET VALUE FROM application.properties
     @Value("${access.token}")
     private String accesstoken;
 
-    // For Annotation
-    ApplicationContext ctx =
-            new AnnotationConfigApplicationContext(SpringMongoConfig.class);
-    MongoOperations mongoOperation =
-            (MongoOperations) ctx.getBean("mongoTemplate");
 
+
+    //loading mongo template
     @Autowired
     MongoTemplate mongoTemplate;
 
@@ -43,33 +40,15 @@ public class ApiController {
     @Autowired
     private MessagesRep messagesRepository;
 
-
-    @RequestMapping(method = RequestMethod.POST, value="/getStatus")
-    @ResponseBody
-    public CheckServerModel CheckTheServer(@RequestBody Map<String, String> body) {
-
-        CheckServerModel sm = new CheckServerModel();
-        String token = body.get("token");
-
-        if (accesstoken.equals(token)) {
-            sm.setError(false);
-            sm.setDb(token);
-            sm.setStatus("done");
-        } else {
-            sm.setError(true);
-            sm.setStatus(accesstoken+":"+token);
-        }
-
-        return sm;
-    }
-
-    @RequestMapping(method = RequestMethod.POST, value="/getDiscussions")
+    //GET THE MESSAGES BY CONVERSATION UNIQUE TOKEN
+    @RequestMapping(method = RequestMethod.POST, value="/getMessagesDiscussion")
     public List<Messages> getConvByToken(@RequestBody Map<String, String> body) {
         String convToken = body.get("cToken");
 
         return messagesRepository.findByCToken(convToken);
     }
 
+    //GET LAST MESSAGE FROM A CONVERSATION
     @RequestMapping(method = RequestMethod.POST, value="/getLastMessage")
     public Messages getLastMessage(@RequestBody Map<String, String> body) {
         String convToken = body.get("cToken");
@@ -79,6 +58,8 @@ public class ApiController {
 
     }
 
+
+    //ADD A NEW LINE
     @RequestMapping(method = RequestMethod.POST, value="/writeMessage")
     public Messages addConvInMessages(@RequestBody Map<String, String> body) {
 
@@ -102,6 +83,7 @@ public class ApiController {
 
     }
 
+    //DELETE MESSAGE BY UNIQUEID
     @RequestMapping(method = RequestMethod.POST, value="/deleteMessage")
     public ResponseEntity<Object> deleteMessage(@RequestBody Map<String, String> body) {
 
