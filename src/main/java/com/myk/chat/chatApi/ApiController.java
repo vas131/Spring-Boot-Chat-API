@@ -1,9 +1,13 @@
 package com.myk.chat.chatApi;
 
 import com.myk.chat.chatApi.configs.SpringMongoConfig;
+import com.myk.chat.chatApi.models.Conversations;
+import com.myk.chat.chatApi.models.ConversationsUsers;
 import com.myk.chat.chatApi.models.Messages;
 import com.myk.chat.chatApi.helpers.RandomString;
+import com.myk.chat.chatApi.repositories.ConverstationsRep;
 import com.myk.chat.chatApi.repositories.MessagesRep;
+import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,9 +23,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Array;
+import java.util.*;
 
 @RestController
 public class ApiController {
@@ -36,11 +39,14 @@ public class ApiController {
     @Autowired
     MongoTemplate mongoTemplate;
 
-    
+
 
     //conversations repository
     @Autowired
     private MessagesRep messagesRepository;
+
+    @Autowired
+    private ConverstationsRep conversationRepository;
 
     //GET THE MESSAGES BY CONVERSATION UNIQUE TOKEN
     @RequestMapping(method = RequestMethod.POST, value="/getMessagesDiscussion")
@@ -48,6 +54,35 @@ public class ApiController {
         String convToken = body.get("cToken");
 
         return messagesRepository.findByCToken(convToken);
+    }
+
+
+    //ADD NEW CONVERSATION
+    @RequestMapping(method = RequestMethod.POST, value="/createConversation")
+    public Conversations createConversation(@RequestBody Map<String, String> body) {
+
+        String cToken = body.get("cToken");
+
+        Conversations conv = new Conversations();
+
+
+        ConversationsUsers conversationsUsers = new ConversationsUsers();
+
+        List<ConversationsUsers> convUsers = new ArrayList<>();
+        
+        conversationsUsers.setUserID(31);
+        conversationsUsers.setUserType("cust");
+        convUsers.add(conversationsUsers);
+
+        conversationsUsers.setUserID(13);
+        conversationsUsers.setUserType("cust");
+        convUsers.add(conversationsUsers);
+
+        conv.setUsers(convUsers);
+        conv.setChatToken("asdasdas");
+
+        return conversationRepository.save(conv);
+
     }
 
     //GET LAST MESSAGE FROM A CONVERSATION
@@ -61,7 +96,7 @@ public class ApiController {
     }
 
 
-    //ADD A NEW LINE
+    //ADD A NEW LINE IN MESSAGE
     @RequestMapping(method = RequestMethod.POST, value="/writeMessage")
     public Messages addConvInMessages(@RequestBody Map<String, String> body) {
 
@@ -93,7 +128,7 @@ public class ApiController {
         String uniqueId = body.get("uniqueID");
 
        // return messagesRepository.deleteByUniqueID(uniqueId);
-        mongoTemplate.remove(Query.query(Criteria.where("uniqueID").is(uniqueId)), Messages.class);
+        mongoTemplate.remove(Query.query(Criteria.where("uniqueID").is(uniqueId).and("cToken").is(convToken)), Messages.class);
 
 
         JSONObject result = new JSONObject();
