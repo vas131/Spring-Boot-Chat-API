@@ -1,9 +1,7 @@
 package com.myk.chat.chatApi;
 
 import com.myk.chat.chatApi.configs.SpringMongoConfig;
-import com.myk.chat.chatApi.models.Conversations;
-import com.myk.chat.chatApi.models.ConversationsUsers;
-import com.myk.chat.chatApi.models.Messages;
+import com.myk.chat.chatApi.models.*;
 import com.myk.chat.chatApi.helpers.RandomString;
 import com.myk.chat.chatApi.repositories.ConverstationsRep;
 import com.myk.chat.chatApi.repositories.MessagesRep;
@@ -59,27 +57,35 @@ public class ApiController {
 
     //ADD NEW CONVERSATION
     @RequestMapping(method = RequestMethod.POST, value="/createConversation")
-    public Conversations createConversation(@RequestBody Map<String, String> body) {
+    @ResponseBody
+    public Conversations createConversation(@RequestBody JSONNewConversation body) {
 
-        String cToken = body.get("cToken");
+        String token = body.getcToken();
+        String cToken = new RandomString().generateRandomString(64);
+        List<JSONNewConversationUsers> convUsersJson = body.getUsers();
 
         Conversations conv = new Conversations();
 
-
-        ConversationsUsers conversationsUsers = new ConversationsUsers();
+        
 
         List<ConversationsUsers> convUsers = new ArrayList<>();
-        
-        conversationsUsers.setUserID(31);
-        conversationsUsers.setUserType("cust");
-        convUsers.add(conversationsUsers);
 
-        conversationsUsers.setUserID(13);
-        conversationsUsers.setUserType("cust");
-        convUsers.add(conversationsUsers);
+        for (JSONNewConversationUsers u : convUsersJson) {
+            //ConversationsUsers cu = new ConversationsUsers(convUsersJson);
+            ConversationsUsers conversationsUsers = new ConversationsUsers();
+            System.out.print(u.getUserId()+",");
+            conversationsUsers.setUserID(u.getUserId());
+            conversationsUsers.setUserType(u.getUserType());
+            convUsers.add(conversationsUsers);
+
+
+        };
+
+
 
         conv.setUsers(convUsers);
-        conv.setChatToken("asdasdas");
+
+        conv.setChatToken(cToken);
 
         return conversationRepository.save(conv);
 
